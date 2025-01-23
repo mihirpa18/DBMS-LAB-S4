@@ -31,8 +31,6 @@ OpenRelTable::OpenRelTable()
     RelCacheTable::relCache[RELCAT_RELID] = (struct RelCacheEntry *)malloc(sizeof(RelCacheEntry));
     *(RelCacheTable::relCache[RELCAT_RELID]) = relCacheEntry;
 
-
-
     /**** setting up Attribute Catalog relation in the Relation Cache Table ****/
 
     relCatBlock.getRecord(relCatRecord, RELCAT_SLOTNUM_FOR_ATTRCAT);
@@ -43,9 +41,6 @@ OpenRelTable::OpenRelTable()
 
     RelCacheTable::relCache[ATTRCAT_RELID] = (struct RelCacheEntry *)malloc(sizeof(RelCacheEntry));
     *(RelCacheTable::relCache[ATTRCAT_RELID]) = attrCacheEntry;
-
-
-
 
     /**** setting up student  relation in the Relation Cache Table ****/
 
@@ -172,4 +167,14 @@ OpenRelTable::~OpenRelTable()
         }
         AttrCacheTable::attrCache[i] = nullptr;
     }
+}
+
+int OpenRelTable::getRelId(char relName[ATTR_SIZE])
+{
+    if (strcmp(relName, RELCAT_RELNAME) == 0)
+        return RELCAT_RELID;
+    if (strcmp(relName, ATTRCAT_RELNAME) == 0)
+        return ATTRCAT_RELID;
+
+    return E_RELNOTOPEN;
 }

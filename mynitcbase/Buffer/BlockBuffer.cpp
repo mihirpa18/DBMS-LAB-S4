@@ -2,8 +2,23 @@
 
 #include <cstdlib>
 #include <cstring>
-// the declarations for these functions can be found in "BlockBuffer.h"
-Disk disk_run;
+
+int compareAttrs(union Attribute attr1,union Attribute attr2,int attrType){
+    double diff;
+
+    if(attrType==STRING){
+        diff=strcmp(attr1.sVal,attr2.sVal);
+    }
+    else{
+        diff=attr1.nVal-attr2.nVal;
+    }
+
+    if(diff>0) return 1;
+    else if(diff<0) return -1;
+    else return 0;
+}
+
+
 BlockBuffer::BlockBuffer(int blockNum)
 {
     // initialise this.blockNum with the argument
@@ -92,3 +107,24 @@ int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr)
 
     return SUCCESS;
 }
+
+int RecBuffer::getSlotMap(unsigned char *SlotMap){
+    unsigned char *bufferptr;
+
+    int ret=loadBlockAndGetBufferPtr(&bufferptr);
+    if(ret!=SUCCESS){
+        return ret;
+    }
+
+    struct HeadInfo head;
+    getHeader(&head);
+
+    int slotCount=head.numSlots;
+
+    unsigned char *SlotMapInBuffer=bufferptr+HEADER_SIZE;
+
+    memcpy(SlotMap,SlotMapInBuffer,slotCount);
+    
+    return SUCCESS;
+}
+
