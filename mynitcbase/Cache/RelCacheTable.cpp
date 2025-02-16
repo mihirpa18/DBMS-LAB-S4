@@ -45,7 +45,7 @@ void RelCacheTable::recordToRelCatEntry(union Attribute record[RELCAT_NO_ATTRS],
 
 int RelCacheTable::getSearchIndex(int relId, RecId *searchIndex)
 {
-    if (relId < 0 || relId > MAX_OPEN)
+    if (relId < 0 || relId >= MAX_OPEN)
         return E_OUTOFBOUND;
 
     if (relCache[relId] == nullptr)
@@ -58,7 +58,7 @@ int RelCacheTable::getSearchIndex(int relId, RecId *searchIndex)
 
 int RelCacheTable::setSearchIndex(int relId, RecId *searchIndex)
 {
-    if (relId < 0 || relId > MAX_OPEN)
+    if (relId < 0 || relId >= MAX_OPEN)
         return E_OUTOFBOUND;
 
     if (relCache[relId] == nullptr)
@@ -69,7 +69,7 @@ int RelCacheTable::setSearchIndex(int relId, RecId *searchIndex)
 }
 
 int RelCacheTable::resetSearchIndex(int relId){
-    if(relId<0 || relId>MAX_OPEN){
+    if(relId<0 || relId>=MAX_OPEN){
         return E_OUTOFBOUND;
     }
 

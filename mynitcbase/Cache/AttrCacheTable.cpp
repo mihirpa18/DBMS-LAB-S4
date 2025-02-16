@@ -46,12 +46,7 @@ int AttrCacheTable::getAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCat
     {
         if (strcmp(entry->attrCatEntry.attrName, attrName) == 0)
         {
-            strcpy(attrCatBuf->relName, entry->attrCatEntry.relName);
-            strcpy(attrCatBuf->attrName, entry->attrCatEntry.attrName);
-            attrCatBuf->attrType = entry->attrCatEntry.attrType;
-            attrCatBuf->offset = entry->attrCatEntry.offset;
-            attrCatBuf->primaryFlag = entry->attrCatEntry.primaryFlag;
-            attrCatBuf->rootBlock = entry->attrCatEntry.rootBlock;
+            *attrCatBuf=entry->attrCatEntry;
             return SUCCESS;
         }
     }
