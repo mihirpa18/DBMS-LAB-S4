@@ -3,21 +3,26 @@
 #include <cstdlib>
 #include <cstring>
 
-int compareAttrs(union Attribute attr1,union Attribute attr2,int attrType){
+int compareAttrs(union Attribute attr1, union Attribute attr2, int attrType)
+{
     double diff;
 
-    if(attrType==STRING){
-        diff=strcmp(attr1.sVal,attr2.sVal);
+    if (attrType == STRING)
+    {
+        diff = strcmp(attr1.sVal, attr2.sVal);
     }
-    else{
-        diff=attr1.nVal-attr2.nVal;
+    else
+    {
+        diff = attr1.nVal - attr2.nVal;
     }
 
-    if(diff>0) return 1;
-    else if(diff<0) return -1;
-    else return 0;
+    if (diff > 0)
+        return 1;
+    else if (diff < 0)
+        return -1;
+    else
+        return 0;
 }
-
 
 BlockBuffer::BlockBuffer(int blockNum)
 {
@@ -50,7 +55,7 @@ int BlockBuffer::getHeader(struct HeadInfo *head)
     memcpy(&head->numEntries, bufferPtr + 16, 4);
     memcpy(&head->numAttrs, bufferPtr + 20, 4);
     memcpy(&head->numSlots, bufferPtr + 24, 4);
-    
+
     return SUCCESS;
 }
 
@@ -63,8 +68,8 @@ int RecBuffer::getRecord(union Attribute *rec, int slotNum)
     struct HeadInfo head;
     this->getHeader(&head);
 
-    int numAttr=head.numAttrs;
-    int slotCount=head.numSlots;
+    int numAttr = head.numAttrs;
+    int slotCount = head.numSlots;
 
     unsigned char *bufferPtr;
     int ret = loadBlockAndGetBufferPtr(&bufferPtr);
@@ -72,11 +77,37 @@ int RecBuffer::getRecord(union Attribute *rec, int slotNum)
     {
         return ret;
     }
-    
-    int recSize=numAttr*ATTR_SIZE;
-    unsigned char *slotPointer= bufferPtr + (HEADER_SIZE + slotCount + (recSize*slotNum));
 
-    memcpy(rec,slotPointer,recSize);
+    int recSize = numAttr * ATTR_SIZE;
+    unsigned char *slotPointer = bufferPtr + (HEADER_SIZE + slotCount + (recSize * slotNum));
+
+    memcpy(rec, slotPointer, recSize);
+
+    return SUCCESS;
+}
+
+int RecBuffer::setRecord(union Attribute *rec, int slotNum)
+{
+    unsigned char *bufferptr;
+    int ret = loadBlockAndGetBufferPtr(&bufferptr);
+    if (ret != SUCCESS)
+    {
+        return ret;
+    }
+
+    HeadInfo head;
+    this->getHeader(&head);
+
+    int numAttr = head.numAttrs;
+    int slots = head.numSlots;
+    int recSize = ATTR_SIZE * numAttr;
+    if (slotNum < 0 || slotNum >= slots)
+        return E_OUTOFBOUND;
+
+    unsigned char *offset = bufferptr + HEADER_SIZE + (slotNum * recSize) + slots;
+
+    memcpy(offset, rec, recSize);
+    StaticBuffer::setDirtyBit(this->blockNum);
 
     return SUCCESS;
 }
@@ -88,7 +119,7 @@ NOTE: this function expects the caller to allocate memory for the argument
 int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr)
 {
     // check whether the block is already present in the buffer using StaticBuffer.getBufferNum()
-    int bufferNum = StaticBuffer::getBufferNum(this->blockNum);  
+    int bufferNum = StaticBuffer::getBufferNum(this->blockNum);
 
     if (bufferNum == E_BLOCKNOTINBUFFER)
     {
@@ -101,6 +132,18 @@ int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr)
 
         Disk::readBlock(StaticBuffer::blocks[bufferNum], this->blockNum);
     }
+    else if (bufferNum != E_BLOCKNOTINBUFFER)
+    {
+
+        for (int i = 0; i < BUFFER_CAPACITY; i++)
+        {
+            if (!StaticBuffer::metainfo[i].free)
+            {
+                StaticBuffer::metainfo[i].timeStamp++;
+            }
+        }
+        StaticBuffer::metainfo[bufferNum].timeStamp = 0;
+    }
 
     // store the pointer to this buffer (blocks[bufferNum]) in *buffPtr
     *buffPtr = StaticBuffer::blocks[bufferNum];
@@ -108,23 +151,24 @@ int BlockBuffer::loadBlockAndGetBufferPtr(unsigned char **buffPtr)
     return SUCCESS;
 }
 
-int RecBuffer::getSlotMap(unsigned char *SlotMap){
+int RecBuffer::getSlotMap(unsigned char *SlotMap)
+{
     unsigned char *bufferptr;
 
-    int ret=loadBlockAndGetBufferPtr(&bufferptr);
-    if(ret!=SUCCESS){
+    int ret = loadBlockAndGetBufferPtr(&bufferptr);
+    if (ret != SUCCESS)
+    {
         return ret;
     }
 
     struct HeadInfo head;
     getHeader(&head);
 
-    int slotCount=head.numSlots;
+    int slotCount = head.numSlots;
 
-    unsigned char *SlotMapInBuffer=bufferptr+HEADER_SIZE;
+    unsigned char *SlotMapInBuffer = bufferptr + HEADER_SIZE;
 
-    memcpy(SlotMap,SlotMapInBuffer,slotCount);
-    
+    memcpy(SlotMap, SlotMapInBuffer, slotCount);
+
     return SUCCESS;
 }
-
