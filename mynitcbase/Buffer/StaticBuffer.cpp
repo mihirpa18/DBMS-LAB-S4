@@ -2,11 +2,21 @@
 
 unsigned char StaticBuffer::blocks[BUFFER_CAPACITY][BLOCK_SIZE];
 struct BufferMetaInfo StaticBuffer::metainfo[BUFFER_CAPACITY];
+unsigned char StaticBuffer::blockAllocMap[DISK_BLOCKS];
 
 StaticBuffer::StaticBuffer()
 {
 
-  // initialise all blocks as free
+  /*we declare the blockAllocMap member field in staticbuffer because the block allocation map
+  too is loaded into memory during the runtime of the database. and update our constructor and
+   destructor to initialise and write-back the block alloc map between the disk and memory.*/
+
+  // copy blockAllocMap blocks from disk to buffer
+  for (int i = 0; i < 4; i++)
+  {
+    Disk::readBlock(blockAllocMap + i * BLOCK_SIZE, i);
+  }
+
   for (int i = 0; i < BUFFER_CAPACITY; i++)
   {
     metainfo[i].free = true;
@@ -16,13 +26,15 @@ StaticBuffer::StaticBuffer()
   }
 }
 
-/*
-At this stage, we are not writing back from the buffer to the disk since we are
-not modifying the buffer. So, we will define an empty destructor for now. In
-subsequent stages, we will implement the write-back functionality here.
-*/
+
 StaticBuffer::~StaticBuffer()
 {
+  // copy blockAllocMap blocks from buffer to disk
+  for (int i = 0; i < 4; i++)
+  {
+    Disk::writeBlock(blockAllocMap + i * BLOCK_SIZE, i);
+  }
+
   for (int i = 0; i < BUFFER_CAPACITY; i++)
   {
     if (metainfo[i].free == false && metainfo[i].dirty == true)
@@ -32,6 +44,7 @@ StaticBuffer::~StaticBuffer()
   }
 }
 
+//if no free buff is found we use LRU policy to free a buff and it is implemented here
 int StaticBuffer::getFreeBuffer(int blockNum)
 {
   if (blockNum < 0 || blockNum > DISK_BLOCKS)
