@@ -38,7 +38,7 @@ OpenRelTable::OpenRelTable()
     relCatBlock.getRecord(relCatRecord, RELCAT_SLOTNUM_FOR_ATTRCAT);
     struct RelCacheEntry attrCacheEntry;
     RelCacheTable::recordToRelCatEntry(relCatRecord, &attrCacheEntry.relCatEntry);
-    attrCacheEntry.recId.block = RELCAT_BLOCK; //please carefully do this
+    attrCacheEntry.recId.block = RELCAT_BLOCK; //please take care of this as this is ATTRCAT_BLOCK (which is wrong and resolved in stage 8) in subsequent Stages till Stage-7&8
     attrCacheEntry.recId.slot = RELCAT_SLOTNUM_FOR_ATTRCAT;
 
     RelCacheTable::relCache[ATTRCAT_RELID] = (struct RelCacheEntry *)malloc(sizeof(RelCacheEntry));
