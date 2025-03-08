@@ -38,7 +38,7 @@ OpenRelTable::OpenRelTable()
     relCatBlock.getRecord(relCatRecord, RELCAT_SLOTNUM_FOR_ATTRCAT);
     struct RelCacheEntry attrCacheEntry;
     RelCacheTable::recordToRelCatEntry(relCatRecord, &attrCacheEntry.relCatEntry);
-    attrCacheEntry.recId.block = ATTRCAT_BLOCK;
+    attrCacheEntry.recId.block = RELCAT_BLOCK; //please carefully do this
     attrCacheEntry.recId.slot = RELCAT_SLOTNUM_FOR_ATTRCAT;
 
     RelCacheTable::relCache[ATTRCAT_RELID] = (struct RelCacheEntry *)malloc(sizeof(RelCacheEntry));
@@ -52,7 +52,7 @@ OpenRelTable::OpenRelTable()
     relCatBlock.getRecord(relCatRecord, 2);
     struct RelCacheEntry student;
     RelCacheTable::recordToRelCatEntry(relCatRecord, &student.relCatEntry);
-    attrCacheEntry.recId.block = ATTRCAT_BLOCK;
+    attrCacheEntry.recId.block = RELCAT_BLOCK;
     attrCacheEntry.recId.slot = 2;
 
     RelCacheTable::relCache[2] = (struct RelCacheEntry *)malloc(sizeof(RelCacheEntry));
