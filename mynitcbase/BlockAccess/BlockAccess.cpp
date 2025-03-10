@@ -211,6 +211,7 @@ int BlockAccess::renameAttribute(char relName[ATTR_SIZE], char oldName[ATTR_SIZE
     return SUCCESS;
 }
 
+
 int BlockAccess::insert(int relId, Attribute *record)
 {
     // get relcat entries
@@ -265,7 +266,7 @@ int BlockAccess::insert(int relId, Attribute *record)
     }
 
     //  if no free slot is found in existing record blocks (rec_id = {-1, -1})
-    if (rec_id.block == -1 || rec_id.slot == -1)
+    if (rec_id.block == -1 && rec_id.slot == -1)
     {
         // if relation is RELCAT, do not allocate any more blocks
         if (relId == RELCAT_RELID)
@@ -273,17 +274,17 @@ int BlockAccess::insert(int relId, Attribute *record)
 
         // get new record
         RecBuffer newBlock;
-        int ret = newBlock.getBlockNum();
-        if (ret == E_DISKFULL)
+        int blockNum = newBlock.getBlockNum();
+        if (blockNum == E_DISKFULL)
             return E_DISKFULL;
 
-        rec_id.block = ret;
+        rec_id.block = blockNum;
         rec_id.slot = 0;
 
         // set the header of the new record block such that it links with
         //    existing record blocks of the relation
         HeadInfo nHead;
-        newBlock.getHeader(&nHead);
+        
         nHead.blockType = REC;
         nHead.pblock = -1;
         nHead.lblock = (prevBlock != -1) ? prevBlock : -1;
@@ -295,7 +296,7 @@ int BlockAccess::insert(int relId, Attribute *record)
 
         // set block's slot map with all slots marked as free
         unsigned char nSlotMap[numOfSlots];
-        newBlock.getSlotMap(nSlotMap);
+        
         for (int i = 0; i < numOfSlots; i++)
         {
             nSlotMap[i] = SLOT_UNOCCUPIED;
@@ -311,7 +312,7 @@ int BlockAccess::insert(int relId, Attribute *record)
             HeadInfo prevHead;
             prevBuff.getHeader(&prevHead);
 
-            prevHead.rblock = rec_id.block;
+            prevHead.rblock = blockNum;
             prevBuff.setHeader(&prevHead);
         }
         else
@@ -329,7 +330,8 @@ int BlockAccess::insert(int relId, Attribute *record)
 
     //insert the record into recid'th slot using setrecord
     RecBuffer blockbuff(rec_id.block);
-    blockbuff.setRecord(record, rec_id.slot);
+    int ret=blockbuff.setRecord(record, rec_id.slot);
+    if(ret!=SUCCESS) return ret;
 
     //set the slotmap by marking entry into which record is inserted  as occupied
     unsigned char blockSlotMap[numOfSlots];
@@ -349,6 +351,8 @@ int BlockAccess::insert(int relId, Attribute *record)
 
     return SUCCESS;
 }
+
+
 
 int BlockAccess::search(int relId, Attribute record[], char attrName[ATTR_SIZE], Attribute attrVal, int op)
 {
@@ -505,4 +509,63 @@ int BlockAccess::deleteRelation(char relName[ATTR_SIZE])
     RelCacheTable::setRelCatEntry(ATTRCAT_RELID, &attrCatEnt);
 
     return SUCCESS;
+}
+
+//This function is used to fetch one record of the relation. 
+//Each subsequent call would return the next record until there are no more records to be returned.
+// It also updates searchIndex in the cache.
+int BlockAccess::project(int relId,Attribute *record){
+    
+    //get prev search index of the relation from the relcache
+    RecId prevRecId;
+    RelCacheTable::getSearchIndex(relId,&prevRecId);
+    int block,slot;
+
+    //if searchInd is {-1,-1}=> new project operation, start from beginging
+    if(prevRecId.block==-1 && prevRecId.slot==-1){
+        //get the first record block
+        RelCatEntry relCatBuff;
+        RelCacheTable::getRelCatEntry(relId,&relCatBuff);
+        block=relCatBuff.firstBlk;
+        slot=0;
+    }
+    else{ //project operation is already in progress
+        block=prevRecId.block;
+        slot=prevRecId.slot+1;
+    }
+
+    //finds the next record
+    while(block!=-1){
+        RecBuffer recBuff(block);
+        HeadInfo head;
+        recBuff.getHeader(&head);
+        unsigned char slotMap[head.numSlots];
+        recBuff.getSlotMap(slotMap);
+
+        if(slot>=head.numSlots){
+            block=head.rblock;
+            slot=0;
+
+        }
+        else if(slotMap[slot]==SLOT_UNOCCUPIED){
+            slot++;
+        }
+        else{
+            break;
+        }
+    }
+
+    // if no record was found
+    if(block==-1){
+        return E_NOTFOUND;
+    }
+    RecId nextRecId{block,slot};
+    RelCacheTable::setSearchIndex(relId,&nextRecId);
+
+    //copy record
+    RecBuffer nextBuff(block);
+    nextBuff.getRecord(record,slot);
+
+    return SUCCESS;
+
 }

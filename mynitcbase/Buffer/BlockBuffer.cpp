@@ -96,7 +96,7 @@ int BlockBuffer::getHeader(struct HeadInfo *head)
     head->numEntries = bufferHeader->numEntries;
     head->numAttrs = bufferHeader->numAttrs;
     head->numSlots = bufferHeader->numSlots;
-    head->blockType = bufferHeader->blockType;
+    head->blockType=bufferHeader->blockType;
 
     return SUCCESS;
 }
@@ -117,6 +117,7 @@ int BlockBuffer::setHeader(struct HeadInfo *head)
     bufferHeader->numEntries = head->numEntries;
     bufferHeader->numAttrs = head->numAttrs;
     bufferHeader->numSlots = head->numSlots;
+    bufferHeader->blockType=head->blockType;
 
     int dirty = StaticBuffer::setDirtyBit(this->blockNum);
     if (dirty != SUCCESS)
@@ -145,15 +146,14 @@ int RecBuffer::getRecord(union Attribute *rec, int slotNum)
     }
 
     int recSize = numAttr * ATTR_SIZE;
-    unsigned char *slotPointer = bufferPtr + (HEADER_SIZE + slotCount + (recSize * slotNum));
+    unsigned char *slotPointer = bufferPtr + HEADER_SIZE + slotCount + (recSize * slotNum);
 
     memcpy(rec, slotPointer, recSize);
 
     return SUCCESS;
 }
 
-
-//set the recored
+// set the recored
 int RecBuffer::setRecord(union Attribute *rec, int slotNum)
 {
     unsigned char *bufferptr;
@@ -172,7 +172,7 @@ int RecBuffer::setRecord(union Attribute *rec, int slotNum)
     if (slotNum < 0 || slotNum >= slots)
         return E_OUTOFBOUND;
 
-    unsigned char *offset = bufferptr + HEADER_SIZE + (slotNum * recSize) + slots;
+    unsigned char *offset = bufferptr + HEADER_SIZE + slots + (slotNum * recSize);
 
     memcpy(offset, rec, recSize);
     StaticBuffer::setDirtyBit(this->blockNum);
@@ -329,19 +329,22 @@ int BlockBuffer::getBlockNum()
     return this->blockNum;
 }
 
+// The block number to which this instance of BlockBuffer is associated
+//(given by the blockNum member field) is freed from the buffer and the disk.
 void BlockBuffer::releaseBlock()
 {
-    if (this->blockNum == INVALID_BLOCKNUM)
+    // if blockNum is INVALID_BLOCKNUM (-1), or it is invalidated already, do nothing
+    if (blockNum == INVALID_BLOCKNUM)
     {
         return;
     }
 
-    int buffNum = StaticBuffer::getBufferNum(this->blockNum);
+    int buffNum = StaticBuffer::getBufferNum(blockNum);
     if (buffNum != E_BLOCKNOTINBUFFER)
     {
         StaticBuffer::metainfo[buffNum].free = true;
-        StaticBuffer::blockAllocMap[this->blockNum] = UNUSED_BLK;
+        StaticBuffer::blockAllocMap[blockNum] = UNUSED_BLK;
     }
-    
+    // set the object's blockNum to INVALID_BLOCK (-1)
     this->blockNum = INVALID_BLOCKNUM;
 }

@@ -4,6 +4,7 @@
 
 OpenRelTableMetaInfo OpenRelTable::tableMetaInfo[MAX_OPEN];
 
+
 OpenRelTable::OpenRelTable()
 {
 
@@ -39,7 +40,7 @@ OpenRelTable::OpenRelTable()
     relCatBlock.getRecord(relCatRecord, RELCAT_SLOTNUM_FOR_ATTRCAT);
     struct RelCacheEntry attrCacheEntry;
     RelCacheTable::recordToRelCatEntry(relCatRecord, &attrCacheEntry.relCatEntry);
-    attrCacheEntry.recId.block = ATTRCAT_BLOCK;
+    attrCacheEntry.recId.block = RELCAT_BLOCK;
     attrCacheEntry.recId.slot = RELCAT_SLOTNUM_FOR_ATTRCAT;
 
     RelCacheTable::relCache[ATTRCAT_RELID] = (struct RelCacheEntry *)malloc(sizeof(RelCacheEntry));
@@ -232,6 +233,8 @@ int OpenRelTable::openRel(char relName[ATTR_SIZE])
 
     return relId;
 }
+
+
 
 int OpenRelTable::closeRel(int relId)
 {

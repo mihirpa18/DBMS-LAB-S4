@@ -1,4 +1,5 @@
 #include "StaticBuffer.h"
+#include <cstring>
 
 unsigned char StaticBuffer::blocks[BUFFER_CAPACITY][BLOCK_SIZE];
 struct BufferMetaInfo StaticBuffer::metainfo[BUFFER_CAPACITY];
@@ -12,10 +13,12 @@ StaticBuffer::StaticBuffer()
    destructor to initialise and write-back the block alloc map between the disk and memory.*/
 
   // copy blockAllocMap blocks from disk to buffer
-  for (int i = 0; i < 4; i++)
-  {
-    Disk::readBlock(blockAllocMap + i * BLOCK_SIZE, i);
-  }
+   for (int i = 0; i < 4; i++) {
+        unsigned char buffer[BLOCK_SIZE];
+        Disk::readBlock(buffer, i);
+        memcpy(blockAllocMap + i*BLOCK_SIZE, buffer, BLOCK_SIZE);
+    }
+
 
   for (int i = 0; i < BUFFER_CAPACITY; i++)
   {
@@ -30,10 +33,12 @@ StaticBuffer::StaticBuffer()
 StaticBuffer::~StaticBuffer()
 {
   // copy blockAllocMap blocks from buffer to disk
-  for (int i = 0; i < 4; i++)
-  {
-    Disk::writeBlock(blockAllocMap + i * BLOCK_SIZE, i);
-  }
+   for (int i = 0; i < 4; i++) {
+        unsigned char buffer[BLOCK_SIZE];
+        memcpy(buffer, blockAllocMap + i*BLOCK_SIZE, BLOCK_SIZE);
+        Disk::writeBlock(buffer, i);
+    }
+
 
   for (int i = 0; i < BUFFER_CAPACITY; i++)
   {
