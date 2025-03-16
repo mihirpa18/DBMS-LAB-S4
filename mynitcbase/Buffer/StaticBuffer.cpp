@@ -1,9 +1,12 @@
 #include "StaticBuffer.h"
 #include <cstring>
+#include<cstdlib>
 
 unsigned char StaticBuffer::blocks[BUFFER_CAPACITY][BLOCK_SIZE];
 struct BufferMetaInfo StaticBuffer::metainfo[BUFFER_CAPACITY];
 unsigned char StaticBuffer::blockAllocMap[DISK_BLOCKS];
+
+int StaticBuffer::noOfComp=0; //initialization to keep track of count (ex-2)
 
 StaticBuffer::StaticBuffer()
 {
@@ -138,4 +141,17 @@ int StaticBuffer::setDirtyBit(int blockNum)
   }
 
   return SUCCESS;
+}
+
+//Returns the block type of the block corresponding to the input block number
+int StaticBuffer::getStaticBlockType(int blockNum){
+  //check if blockNum is Valid
+  if(blockNum<0 || blockNum>DISK_BLOCKS){
+    return E_OUTOFBOUND;
+  }
+
+  unsigned char bufferPtr=StaticBuffer::blockAllocMap[blockNum];
+  int blockType=(int )bufferPtr;
+
+  return blockType;
 }

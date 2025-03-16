@@ -16,6 +16,7 @@ bool isNumber(char *str)
 // It inserts the records of source relation which satisfies the given condition into the target Relation.
 int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr[ATTR_SIZE], int op, char strVal[ATTR_SIZE])
 {
+  
     // get source rel relid to check if it is open
     int srcRelId = OpenRelTable::getRelId(srcRel);
     if (srcRelId == E_RELNOTOPEN)
@@ -90,7 +91,9 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
 
     // reset search index of both relcache and attrcache
     RelCacheTable::resetSearchIndex(srcRelId);
-    //  AttrCacheTable::resetSearchIndex(srcRelId,offset);
+    AttrCacheTable::resetSearchIndex(srcRelId,attr);
+
+    StaticBuffer::noOfComp=0;
 
     // read every record that satisfies the condition by repeatedly
     while (BlockAccess::search(srcRelId, record, attr, attrVal, op) == SUCCESS)
@@ -103,6 +106,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
             return insert;
         }
     }
+    printf("Number of comparisons = %d\n",StaticBuffer::noOfComp);
 
     // close the target rel
     Schema::closeRel(targetRel);
