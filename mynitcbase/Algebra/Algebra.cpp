@@ -93,6 +93,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
     RelCacheTable::resetSearchIndex(srcRelId);
     AttrCacheTable::resetSearchIndex(srcRelId,attr);
 
+    //ex-2 (we have to reset the count)
     StaticBuffer::noOfComp=0;
 
     // read every record that satisfies the condition by repeatedly
@@ -106,6 +107,7 @@ int Algebra::select(char srcRel[ATTR_SIZE], char targetRel[ATTR_SIZE], char attr
             return insert;
         }
     }
+    //ex-2 - printing number of comparisons
     printf("Number of comparisons = %d\n",StaticBuffer::noOfComp);
 
     // close the target rel
