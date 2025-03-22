@@ -31,6 +31,28 @@ int AttrCacheTable::getAttrCatEntry(int relId, int attrOffset, AttrCatEntry *att
     return E_ATTRNOTEXIST;
 }
 
+int AttrCacheTable::setAttrCatEntry(int relId,int attrOffset,AttrCatEntry *attrCatBuf){
+     if (relId < 0 || relId > MAX_OPEN)
+    {
+        return E_OUTOFBOUND;
+    }
+    if (attrCache[relId] == nullptr)
+        return E_RELNOTOPEN;
+
+    for (auto *entry = attrCache[relId]; entry != nullptr; entry = entry->next)
+    {
+        if (entry->attrCatEntry.offset==attrOffset)
+        {
+            entry->attrCatEntry=*attrCatBuf;
+            //set the dirty flag
+            attrCache[relId]->dirty=true;
+
+            return SUCCESS;
+        }
+    }
+    return E_ATTRNOTEXIST;
+
+}
 
 int AttrCacheTable::getAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCatEntry *attrCatBuf)
 {
@@ -52,6 +74,33 @@ int AttrCacheTable::getAttrCatEntry(int relId, char attrName[ATTR_SIZE], AttrCat
     }
     return E_ATTRNOTEXIST;
 }
+
+// Sets the Attribute Catalog entry corresponding to the given attribute of the specified relation in the Attribute Cache Table.
+int AttrCacheTable::setAttrCatEntry(int relId,char attrName[ATTR_SIZE],AttrCatEntry *attrCatBuf){
+     if (relId < 0 || relId > MAX_OPEN)
+    {
+        return E_OUTOFBOUND;
+    }
+    if (attrCache[relId] == nullptr)
+        return E_RELNOTOPEN;
+
+    for (auto *entry = attrCache[relId]; entry != nullptr; entry = entry->next)
+    {
+        if (strcmp(entry->attrCatEntry.attrName, attrName) == 0)
+        {
+            entry->attrCatEntry=*attrCatBuf;
+            //set the dirty flag
+            attrCache[relId]->dirty=true;
+
+            return SUCCESS;
+        }
+    }
+    return E_ATTRNOTEXIST;
+
+}
+
+
+
 
 /* Converts a attribute catalog record to AttrCatEntry struct
     We get the record as Attribute[] from the BlockBuffer.getRecord() function.

@@ -364,22 +364,25 @@ IndLeaf::IndLeaf() : IndBuffer('L') {}
 
 IndLeaf::IndLeaf(int blockNum) : IndBuffer(blockNum) {};
 
-//get indecNum th entry of the block
-int IndInternal::getEntry(void *ptr,int indexNum){
-    //if indexnum is not in valid range
-    if(indexNum<0 || indexNum>=MAX_KEYS_INTERNAL){
+// get indexNum th entry of the block
+int IndInternal::getEntry(void *ptr, int indexNum)
+{
+    // if indexnum is not in valid range
+    if (indexNum < 0 || indexNum >= MAX_KEYS_INTERNAL)
+    {
         return E_OUTOFBOUND;
     }
 
-    //get the starting address of buffer
+    // get the starting address of buffer
     unsigned char *bufferPtr;
-    int ret=loadBlockAndGetBufferPtr(&bufferPtr);
-    if(ret!=SUCCESS){
+    int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+    if (ret != SUCCESS)
+    {
         return ret;
     }
 
-    //typecast void ptr to indinternal entry ptr
-    struct InternalEntry *internalEntry=(struct InternalEntry *)ptr;
+    // typecast void ptr to indinternal entry ptr
+    struct InternalEntry *internalEntry = (struct InternalEntry *)ptr;
 
     unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * 20);
 
@@ -388,36 +391,97 @@ int IndInternal::getEntry(void *ptr,int indexNum){
     memcpy(&(internalEntry->rChild), entryPtr + 20, 4);
 
     return SUCCESS;
-
 }
 
-//just to to avoid compilation issues
-int IndInternal::setEntry(void *ptr,int indexNum){
-    return 0;
-}
-
-int IndLeaf::getEntry(void *ptr,int indexNum){
-    //if indexnum is not in valid range
-    if(indexNum<0 || indexNum>=MAX_KEYS_INTERNAL){
+// Sets the indexNumth entry of the block with the input struct InternalEntry contents.
+int IndInternal::setEntry(void *ptr, int indexNum)
+{
+    // if index num is not in valid range
+    if (indexNum < 0 || indexNum >= MAX_KEYS_INTERNAL)
+    {
         return E_OUTOFBOUND;
     }
-
-    //get the starting address of buffer
+    // get the starting address of the buffer
     unsigned char *bufferPtr;
-    int ret=loadBlockAndGetBufferPtr(&bufferPtr);
-    if(ret!=SUCCESS){
+    int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+    if (ret != SUCCESS)
+    {
         return ret;
     }
 
-    unsigned char *entryPtr=bufferPtr+HEADER_SIZE+(indexNum*LEAF_ENTRY_SIZE);
-    memcpy((struct Index *)ptr,entryPtr,LEAF_ENTRY_SIZE);
+    // typecast void ptr to indinternal entry ptr
+    struct InternalEntry *internalEntry = (struct InternalEntry *)ptr;
+
+    /*
+    - copy the entries from *internalEntry to the indexNum`th entry
+    - make sure that each field is copied individually as in the following code
+    - the lChild and rChild fields of InternalEntry are of type int32_t
+    - int32_t is a type of int that is guaranteed to be 4 bytes across every
+      C++ implementation. sizeof(int32_t) = 4
+    */
+    /* the indexNum'th entry will begin at an offset of
+       HEADER_SIZE + (indexNum * (sizeof(int) + ATTR_SIZE) )
+       from bufferPtr */
+    unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * 20);
+    memcpy(entryPtr, &(internalEntry->lChild), 4);
+    memcpy(entryPtr + 4, &(internalEntry->attrVal), 16);
+    memcpy(entryPtr + 20, &(internalEntry->rChild), 4);
+
+     ret = StaticBuffer::setDirtyBit(this->blockNum);
+    if (ret != SUCCESS)
+    {
+        return ret;
+    }
+    return SUCCESS;
+}
+
+int IndLeaf::getEntry(void *ptr, int indexNum)
+{
+    // if indexnum is not in valid range
+    if (indexNum < 0 || indexNum >= MAX_KEYS_INTERNAL)
+    {
+        return E_OUTOFBOUND;
+    }
+
+    // get the starting address of buffer
+    unsigned char *bufferPtr;
+    int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+    if (ret != SUCCESS)
+    {
+        return ret;
+    }
+
+    unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * LEAF_ENTRY_SIZE);
+    memcpy((struct Index *)ptr, entryPtr, LEAF_ENTRY_SIZE);
 
     return SUCCESS;
 }
 
-//to avoid compilation issues
-int IndLeaf::setEntry(void *ptr,int indexNum){
-    return 0;
+// to avoid compilation issues
+int IndLeaf::setEntry(void *ptr, int indexNum)
+{
+    // if indexnum is not in valid range
+    if (indexNum < 0 || indexNum >= MAX_KEYS_INTERNAL)
+    {
+        return E_OUTOFBOUND;
+    }
+
+    // get the starting address of buffer
+    unsigned char *bufferPtr;
+    int ret = loadBlockAndGetBufferPtr(&bufferPtr);
+    if (ret != SUCCESS)
+    {
+        return ret;
+    }
+
+    unsigned char *entryPtr = bufferPtr + HEADER_SIZE + (indexNum * LEAF_ENTRY_SIZE);
+    memcpy(entryPtr, (struct Index *)ptr, LEAF_ENTRY_SIZE);
+
+    ret = StaticBuffer::setDirtyBit(this->blockNum);
+    if (ret != SUCCESS)
+    {
+        return ret;
+    }
+
+    return SUCCESS;
 }
-
-
