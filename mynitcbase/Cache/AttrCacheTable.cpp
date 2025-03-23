@@ -45,7 +45,7 @@ int AttrCacheTable::setAttrCatEntry(int relId,int attrOffset,AttrCatEntry *attrC
         {
             entry->attrCatEntry=*attrCatBuf;
             //set the dirty flag
-            attrCache[relId]->dirty=true;
+            entry->dirty=true;
 
             return SUCCESS;
         }
@@ -90,7 +90,7 @@ int AttrCacheTable::setAttrCatEntry(int relId,char attrName[ATTR_SIZE],AttrCatEn
         {
             entry->attrCatEntry=*attrCatBuf;
             //set the dirty flag
-            attrCache[relId]->dirty=true;
+            entry->dirty=true;
 
             return SUCCESS;
         }
