@@ -396,7 +396,7 @@ int BPlusTree::findLeafToInsert(int rootBlock, Attribute attrVal, int attrType)
         for (int i = 0; i < header.numEntries; i++)
         {
             IndInt.getEntry(&intEntry, i);
-            if (compareAttrs(intEntry.attrVal, attrVal, attrType) >= 0)
+            if (compareAttrs(intEntry.attrVal, attrVal, attrType) > 0)
             {
                 finder = i;
                 break;
@@ -447,7 +447,7 @@ int BPlusTree::insertIntoLeaf(int relId, char attrName[ATTR_SIZE], int blockNum,
     for (int i = 0; i < blockHeader.numEntries; i++)
     {
         leafBlock.getEntry(&tempEntry, i);
-        if (compareAttrs(tempEntry.attrVal, indexEntry.attrVal, attrCatBuff.attrType) >= 0)
+        if (compareAttrs(tempEntry.attrVal, indexEntry.attrVal, attrCatBuff.attrType) > 0)
         {
             tar_ind = i;
             break;
@@ -571,7 +571,9 @@ int BPlusTree::splitLeaf(int leafBlockNum, Index indices[])
 int BPlusTree::insertIntoInternal(int relId, char attrName[ATTR_SIZE], int intlBlockNum, InternalEntry intEntry)
 {
     AttrCatEntry attrCatBuff;
-    AttrCacheTable::getAttrCatEntry(relId, attrName, &attrCatBuff);
+    int  ret=AttrCacheTable::getAttrCatEntry(relId, attrName, &attrCatBuff);
+    if (ret != SUCCESS)
+        return ret;
 
     // declare intBlk
     IndInternal intBlock(intlBlockNum);
@@ -597,7 +599,7 @@ int BPlusTree::insertIntoInternal(int relId, char attrName[ATTR_SIZE], int intlB
     for (int i = 0; i < blockHeader.numEntries; i++)
     {
         intBlock.getEntry(&tempEntry, i);
-        if (compareAttrs(tempEntry.attrVal, intEntry.attrVal, attrCatBuff.attrType) >= 0)
+        if (compareAttrs(tempEntry.attrVal, intEntry.attrVal, attrCatBuff.attrType) > 0)
         {
             tar_ind = i;
             break;
@@ -614,15 +616,17 @@ int BPlusTree::insertIntoInternal(int relId, char attrName[ATTR_SIZE], int intlB
 
     internalEntries[tar_ind] = intEntry;
 
+     for (int i = tar_ind; i < blockHeader.numEntries; i++)
+    {
+        intBlock.getEntry(&internalEntries[i + 1], i);
+    }
+
     if (tar_ind < blockHeader.numEntries)
     {
         internalEntries[tar_ind + 1].lChild = internalEntries[tar_ind].rChild;
     }
 
-    for (int i = tar_ind; i < blockHeader.numEntries; i++)
-    {
-        intBlock.getEntry(&internalEntries[i + 1], i);
-    }
+   
 
     if (blockHeader.numEntries != MAX_KEYS_INTERNAL)
     {
@@ -707,15 +711,18 @@ int BPlusTree::splitInternal(int intBlockNum, InternalEntry internalEntries[])
     /* block type of a child of any entry of the internalEntries array */
     int type = StaticBuffer::getStaticBlockType(internalEntries[0].lChild);
 
-    BlockBuffer firstChildBlk(internalEntries[half + 1].lChild);
+    InternalEntry entryBuffer;
+    rightBlk.getEntry(&entryBuffer, 0);
+    BlockBuffer firstChildBlk(entryBuffer.lChild);
     HeadInfo firstHead;
     firstChildBlk.getHeader(&firstHead);
     firstHead.pblock = rightBlkNum;
     firstChildBlk.setHeader(&firstHead);
 
-    for (int i = 0; i < half; i++)
+    for (int i = 0; i < rightBlkHeader.numEntries; i++)
     {
-        BlockBuffer childBlk(internalEntries[i + half + 1].rChild);
+         rightBlk.getEntry(&entryBuffer, i);
+        BlockBuffer childBlk(entryBuffer.rChild);
         HeadInfo childHead;
         childBlk.getHeader(&childHead);
         childHead.pblock = rightBlkNum;
