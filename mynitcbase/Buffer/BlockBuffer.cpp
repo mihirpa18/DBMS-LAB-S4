@@ -344,8 +344,9 @@ void BlockBuffer::releaseBlock()
     if (buffNum != E_BLOCKNOTINBUFFER)
     {
         StaticBuffer::metainfo[buffNum].free = true;
-        StaticBuffer::blockAllocMap[blockNum] = UNUSED_BLK;
+        
     }
+    StaticBuffer::blockAllocMap[blockNum] = UNUSED_BLK;
     // set the object's blockNum to INVALID_BLOCK (-1)
     this->blockNum = INVALID_BLOCKNUM;
 }

@@ -149,20 +149,18 @@ int Schema::deleteRel(char relName[])
 }
 
 // This method creates a bplus indexing on an attribute attrName in a relation relName as specified in arguments.
-int Schema::createIndex(char relName[ATTR_SIZE], char attrName[ATTR_SIZE])
-{
-    // if the relName is either Relation Catalog or Attribute Catalog
-    if (strcmp(relName, (char *)RELCAT_RELNAME) == 0 || strcmp(relName, (char *)ATTRCAT_RELNAME) == 0)
-    {
+
+int Schema::createIndex(char relName[ATTR_SIZE], char attrName[ATTR_SIZE]) {
+    if (
+        strcmp(relName, (char* )RELCAT_RELNAME) == 0 ||
+        strcmp(relName, (char* )ATTRCAT_RELNAME) == 0
+    ) {
         return E_NOTPERMITTED;
     }
 
-    // check if open or not
     int relId = OpenRelTable::getRelId(relName);
     if (relId == E_RELNOTOPEN)
-    {
         return E_RELNOTOPEN;
-    }
 
     return BPlusTree::bPlusCreate(relId, attrName);
 }
