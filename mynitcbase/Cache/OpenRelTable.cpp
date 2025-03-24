@@ -268,11 +268,11 @@ int OpenRelTable::closeRel(int relId)
         {
             // convert attrcat entry to record
             Attribute record[ATTRCAT_NO_ATTRS];
-            AttrCatEntry attrCatBuf = AttrCacheTable::attrCache[relId]->attrCatEntry;
+            AttrCatEntry attrCatBuf = entry->attrCatEntry;
             AttrCacheTable::attrCatEntryToRecord(&attrCatBuf, record);
             // write back entries
-            RecBuffer attrCatBlock(AttrCacheTable::attrCache[relId]->recId.block);
-            attrCatBlock.setRecord(record, AttrCacheTable::attrCache[relId]->recId.slot);
+            RecBuffer attrCatBlock(entry->recId.block);
+            attrCatBlock.setRecord(record, entry->recId.slot);
         }
         
     }
