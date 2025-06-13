@@ -27,3 +27,19 @@ Key learning outcomes include:
 - **Buffer Management** for handling in-memory page caching.
 - **No Concurrency**: This implementation is single-user and single-threaded for simplicity and learning purposes.
 
+
+> Note: Folder/file structure may vary based on your implementation. Please adjust accordingly.
+
+## 🚀 Getting Started
+
+### Requirements
+- Linux environment 
+
+
+### Build Instructions
+
+```bash
+git clone https://github.com/yourusername/nitcbase.git
+cd nitcbase
+make
+./nitcbase
