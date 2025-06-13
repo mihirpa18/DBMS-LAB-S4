@@ -52,4 +52,5 @@ The project is heavily inspired by the academic project documentation available 
 
 ## 🛠 Technologies Used
 - **Language:** C++
-
+### Note
+Refer to the documentation before you do anything and try to do it yourself by refering to docs
