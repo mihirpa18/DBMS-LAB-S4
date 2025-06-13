@@ -33,8 +33,9 @@ Key learning outcomes include:
 ## 🚀 Getting Started
 
 ### Requirements
-- Linux environment 
-
+- Linux environment
+- c/c++  compiler (such as gcc/g++)
+-git
 
 ### Build Instructions
 
@@ -43,3 +44,12 @@ git clone https://github.com/yourusername/nitcbase.git
 cd nitcbase
 make
 ./nitcbase
+```
+
+### Documentation
+The project is heavily inspired by the academic project documentation available at:  
+➡ [NITCbase Official Docs](https://nitcbase.github.io/)
+
+## 🛠 Technologies Used
+- **Language:** C++
+
